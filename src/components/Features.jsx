@@ -42,12 +42,10 @@ const Features = () => {
       <div className="container mx-auto px-3 md:px-10">
         <div className="px-5 py-32">
           <p className="font-VeniteAdoremus-regular text-lg text-blue-50">
-            Into the Metagame Layer
+          Fair Play. Verified Wins. Total Transparency.
           </p>
           <p className="max-w-md font-circularweb text-lg text-blue-50 opacity-50">
-            Immerse yourself in a rich and ever-expanding universe where a
-            vibrant array of products converge into an interconnected overlay
-            experience on your world.
+          Our platform brings fairness back to sports betting. Using Chainlink oracles, we fetch verified Premier League data straight to the blockchain — ensuring every outcome is authentic and every payout is automatic. No bookies, no bias, just code you can trust.
           </p>
         </div>
 
@@ -63,21 +61,21 @@ const Features = () => {
             <GameCard
               src="videos/card-2.mp4"
               title={<>Real Matches. Real Data. Real Time.</>}
-              description=" Stay ahead of the game with live English Premier League stats streamed directly to the blockchain through Chainlink oracles. Every goal, assist, and final whistle is verified — no delays, no manipulation."
+              description="  "
             />
           </CardTilt>
           <CardTilt className="cards-tilt_1 border-hsla rounded-md row-span-1 col-span-2 md:col-span-1 md:row-span-1 w-full md:pr-4">
             <GameCard
               src="videos/card-3.mp4"
               title={<>Fans Run the Game</>}
-              description="No waiting, no disputes. Once the final result is verified via Chainlink, the smart contract automatically distributes winnings straight to your wallet — instantly and transparently."
+              description="No waiting, no disputes. Once the final result is verified via Chainlink, the smart contract automatically distributes winnings straight to your wallet."
             />
           </CardTilt>
           <CardTilt className="Card-tilt_1 border-hsla rounded-md row-span-1 col-span-2 md:col-span-1 md:row-span-1 w-full overflow-hidden">
             <GameCard
               src="videos/card-4.mp4"
               title={<>Trust the Code, Not the Bookie.</>}
-              description="All odds, bets, and results are publicly verifiable on-chain. No hidden margins, no rigged odds — just 100% transparent gameplay you can audit anytime."
+              description="All odds, bets, and results are publicly verifiable on-chain. "
             />
           </CardTilt>
 

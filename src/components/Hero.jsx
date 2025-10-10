@@ -164,7 +164,7 @@ const Hero = () => {
         <h1 className="header-font hero-heading absolute bottom-20 md:bottom-5 right-10 z-40 text-blue-75">
           Reimagi<b>n</b>ed
         </h1>
-        <div className="absolute left-10 top-0 z-40 size-full">
+        <div className="absolute left-0 top-0 z-40 size-full">
           <div className="mt-24 px-5 sm:px-10">
             <h1 className="hero-heading header-font text-blue-100">
               B<b>e</b>tting

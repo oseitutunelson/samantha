@@ -253,7 +253,7 @@ b {
 }
 
 @utility card-title {
-  @apply uppercase md:text-6xl text-4xl font-black font-zentry;
+  @apply uppercase md:text-6xl sm:text-4xl text-2xl font-black font-zentry;
 }
 
 @utility card-tilt_1 {

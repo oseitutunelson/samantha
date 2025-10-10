@@ -35,16 +35,15 @@ const About = () => {
     <div id="about" className="min-h-screen w-screen">
 
       <div className="relative mb-8 mt-10 md:mt-36 flex flex-col items-center gap-5">
-      <h2 className="font-general text-sm uppercase md:text-[10px]">Welcome to Ophelia</h2>
+      <h2 className="font-general text-sm uppercase md:text-[10px]">Welcome to Samantha</h2>
         <AnimatedTitle
-          title="Football Thrills, Powered by Blockchain."
+          title="The Future of Sports Betting is On-Chain."
           containerClass="mt-5 !text-black text-center "
         />
         <div className="about-subtext font-robertmedium">
-          <p>When the World Becomes the Server, Every Choice Is a Quest</p>
+          <p>Betting made beautiful as the name </p>
           <p className="text-gray-500">
-            Breaking the boundaries between games—one world where everyone plays
-            together.
+          We’re building a transparent, borderless betting ecosystem where every wager is tokenized, every result is verified on-chain, and every fan has full control. 
           </p>
         </div>
       </div>
@@ -52,10 +51,12 @@ const About = () => {
       <div className="h-dvh w-screen" id="clip">
         <div className="mask-clip-path about-image">
           <video
-            src="videos/about.mp4"
+            src="/videos/about.mp4"
             alt="Background"
             autoPlay
             loop
+            muted
+            playsInline
             className="absolute left-0 top-0 size-full object-cover"
           />
         </div>
