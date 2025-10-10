@@ -1,0 +1,4 @@
+- [x] Add preload="auto" and image-rendering: crisp-edges style to the mini upcoming video element
+- [x] Add preload="auto" and image-rendering: crisp-edges style to the next video element
+- [x] Add preload="auto" and image-rendering: crisp-edges style to the main background video element
+- [x] Test the changes by running the development server (videos still low quality, likely due to low resolution source videos)
