@@ -1,32 +1,51 @@
-#  HyperQuest
+#  Samantha
 
 ## About
-**HyperQuest** is built with **React**, **Tailwind CSS**, and **GSAP** for smooth animations. It is a **fully responsive, interactive web application** that emulates the engaging experience, focusing on dynamic UI, animations, and modern front-end design practices.
+**Samantha** is a decentralized sports betting platform built on blockchain that brings live English Premier League data on-chain through Chainlink oracles.
+It transforms traditional betting into a transparent, tokenized, and trustless experience — where users own their wagers, receive instant payouts, and earn rewards in the platform’s native token.
 
-This project showcases:
-- Component-based architecture with **React**
-- Responsive design using **Tailwind CSS**
-- Interactive animations powered by **GSAP**
-- Clean, modern UI
-
-**Note:** This is a **frontend-only project** and does not include backend or authentication.
-
+ 
+ 
 ---
 
 ## ✨ Features
-- Fully **responsive layout** for desktop, tablet, and mobile
-- **Homepage and Landing sections** 
-- **Animated banners, bento grid and transitions** with GSAP
-- **Navigation menus** and interactive UI components
-- **Section-based scrolling and animations**
-- Modular **React components** for reusable UI elements
+- **Live Data with Chainlink**
+PremierBetX fetches real-time Premier League match data from trusted APIs through Chainlink oracles, ensuring accuracy and integrity of every result.
 
+- **Tokenized Bets**
+Each bet placed mints a unique NFT ticket representing your wager.
+Trade, hold, or sell it — your bets are now digital assets.
+- **Instant, Automated Payouts**
+When the final whistle blows, smart contracts verify the result on-chain and instantly distribute winnings to wallets — no intermediaries or delays.
+- **Transparent & Fairs**
+Every action — odds, bets, outcomes — is recorded immutably on-chain.
+Trust the code, not the bookie.
+-**$SMT – Platform Token**
+
+$SMT is the native utility and governance token that powers the ecosystem:
+
+*Place bets and earn bonuses
+
+*Stake for rewards
+
+*Vote on future upgrades and new league integrations
 ---
 
-## 🛠️ Tech Stack
-- **Frontend:** React, Tailwind CSS  
-- **Animations:** GSAP (GreenSock Animation Platform)  
-- **Build Tool:** Vite
+##How It Works
 
----
+-Fetch Live Data:
+Chainlink oracles pull verified Premier League match results and stats from trusted APIs.
+
+-Place a Bet:
+Users connect their wallet, select a fixture, and stake using $EPLT or supported tokens.
+A bet NFT is minted as proof of the wager.
+
+-Wait for Match Completion:
+Once the game ends, Chainlink updates the on-chain data feed with the result.
+
+-Automatic Settlement:
+Smart contracts calculate winnings and instantly distribute rewards to the winners’ wallets.
+
+-Own the Game:
+Your bet NFT remains on-chain — collectible, tradable, and fully transparent.
 
