@@ -13,11 +13,10 @@ const Footer = () => {
       <div className="container mx-auto flex flex-col gap-10 px-6 md:flex-row md:justify-between">
         <div className="flex flex-col gap-3">
           <h2 className="text-2xl font-bold font-VeniteAdoremus-regular">
-            HyperQuest
+           Samantha
           </h2>
           <p className="text-sm font-general text-blue-50 max-w-xs">
-            Gateway to a universe of imagination, where every game is a new
-            adventure waiting to unfold.
+          Stay ahead of the game with live English Premier League stats streamed directly to the blockchain through Chainlink oracles. Every goal, assist, and final whistle is verified — no delays, no manipulation.
           </p>
         </div>
 
@@ -27,7 +26,7 @@ const Footer = () => {
             Home
           </a>
           <a href="/prologue" className="hover:underline hover:text-white">
-            Prologue
+            About
           </a>
           <a href="/vault" className="hover:underline hover:text-white">
             Features
@@ -61,7 +60,7 @@ const Footer = () => {
 
       {/* Footer Bottom */}
       <div className="mt-10 border-t border-gray-400 pt-4 text-center text-xs text-blue-50">
-        © HyperQuest 2025. All rights reserved.
+        © sexylabs 2025. All rights reserved.
       </div>
     </footer>
   );

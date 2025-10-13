@@ -13,11 +13,11 @@ const Contact = () => {
       <div className="relative rounded-lg bg-black py-24 text-blue-50 sm:overflow-hidden">
         <div className="absolute -left-20 top-0 hidden h-full w-72 overflow-hidden sm:block lg:left-20 lg:w-96">
           <ImageClipBox
-            src="/img/contact_3.gif"
+            src="/img/contact4.jpg"
             clipClass="contact-clip-path-1"
           />
           <ImageClipBox
-            src="/img/contact_2.gif"
+            src="/img/contact5.jpg"
             clipClass="contact-clip-path-2 lg:translate-y-10 translate-y-60"
           />
         </div>
@@ -28,22 +28,22 @@ const Contact = () => {
             clipClass="absolute md:scale-125"
           /> */}
           <ImageClipBox
-            src="/img/contact_1.gif"
+            src="/img/contact1.jpg"
             clipClass="sword-man-clip-path md:scale-125"
           />
         </div>
 
         <div className="flex flex-col items-center text-center">
           <p className="mb-10 font-general text-[12px] uppercase">
-            Explore HyperQuest
+            Explore Samantha
           </p>
 
           <AnimatedTitle
-            title="Journey through the realms of imagination"
+            title="Samantha — The Beautiful Game, Rebuilt on Blockchain."
             className="special-font !md:text-[4.5rem] w-full !text-4xl !font-black !leading-[.9]"
           />
 
-          <Button title="contact us" containerClass="mt-10 cursor-pointer" />
+          <Button title="learn more" containerClass="mt-10 cursor-pointer" />
         </div>
       </div>
     </div>

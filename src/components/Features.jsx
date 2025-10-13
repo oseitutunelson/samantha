@@ -92,7 +92,7 @@ const Features = () => {
 
               <div>
                 <img
-                  src="/img/2.gif"
+                  src="/img/port.jpg"
                   alt="Image 1"
                   className="w-full h-full object-cover rounded-md"
                 />
@@ -100,7 +100,7 @@ const Features = () => {
 
               <div>
                 <img
-                  src="/img/1.gif"
+                  src="/img/port1.jpg"
                   alt="Image 2"
                   className="w-full h-full object-cover rounded-md"
                 />

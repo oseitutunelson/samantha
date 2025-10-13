@@ -50,12 +50,11 @@ const Story = () => {
     >
       <div className="flex flex-col size-full items-center py-10 pb-24">
         <p className="font-general text-sm uppercase md:text-[10px]">
-          The story of HyperQuest is a journey through the realms of
-          imagination.
+        Born from the love of the game, Samantha is more than just a betting platform — it’s the heartbeat of football on the blockchain.
         </p>
         <div className="relative size-full">
           <AnimatedTitle
-            title="where heroes rise, legends are born."
+            title="Bet on the Game. Own the Moment."
             sectionID="#prologue"
             containerClass="mt-5 pointer-events-none mix-blend-difference relative z-10"
           />
@@ -71,7 +70,7 @@ const Story = () => {
                   onMouseUp={handleMouseLeave}
                   onMouseEnter={handleMouseLeave}
                   onMouseMove={handleMouseMove}
-                  src="/img/portal_2.jpg"
+                  src="/img/contact.jpg"
                   alt="entrance"
                   className="object-contain"
                 />
@@ -83,13 +82,11 @@ const Story = () => {
         <div className="-mt-80 flex w-full justify-center md:-mt-64 md:me-44 md:justify-end ">
           <div className="flex h-full w-fit flex-col items-center md:items-start ">
             <p className="mt-3 max-w-sm text-center font-mono text-violet-50 md:text-start">
-              The journey begins with a single step, and every step leads to a
-              new adventure. Discover the realms of HyperQuest, where every
-              choice is a quest, and every quest is a story waiting to be told.
+            We created this platform for the true football fans — the ones who live for the thrill of the game. Every match, every stat, and every win happens in real-time, secured by blockchain. It’s not just betting anymore — it’s belonging to the next evolution of fan engagement.
             </p>
             <Button
               id="realm-button"
-              title="Browse Games"
+              title="Launch Dapp"
               containerClass="mt-5"
             />
           </div>
