@@ -1,5 +1,5 @@
 {
-  "name": "hyperquest",
+  "name": "samantha",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,28 +7,48 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "set-secrets": "npx @chainlink/functions-toolkit secrets set --secrets-file functions/secrets.json"
   },
   "dependencies": {
+    "@chainlink/contracts": "^1.5.0",
     "@gsap/react": "^2.1.2",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@rainbow-me/rainbowkit": "^2.2.9",
     "@tailwindcss/vite": "^4.1.4",
+    "@tanstack/react-query": "^5.90.5",
+    "dotenv": "^17.2.3",
     "gsap": "^3.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-use": "^17.6.0",
-    "tailwindcss": "^4.1.4"
+    "tailwindcss": "^4.1.4",
+    "viem": "^2.38.4",
+    "wagmi": "^2.18.2"
   },
   "devDependencies": {
+    "@chainlink/functions-toolkit": "^0.3.2",
     "@eslint/js": "^9.22.0",
+    "@nomicfoundation/hardhat-ignition": "^3.0.3",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+    "@types/chai": "^4.3.20",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.18.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "chai": "^5.3.3",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "ethers": "^6.15.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "globals": "^16.0.0",
     "hardhat": "^3.0.7",
+    "mocha": "^11.7.4",
+    "typescript": "~5.8.0",
     "vite": "^6.3.1"
   }
 }

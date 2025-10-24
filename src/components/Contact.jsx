@@ -39,7 +39,7 @@ const Contact = () => {
           </p>
 
           <AnimatedTitle
-            title="Samantha — The Beautiful Game, Rebuilt on Blockchain."
+            title="The Beautiful Game, Rebuilt on Blockchain."
             className="special-font !md:text-[4.5rem] w-full !text-4xl !font-black !leading-[.9]"
           />
 

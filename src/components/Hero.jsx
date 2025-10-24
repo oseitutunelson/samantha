@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/all";
 gsap.registerPlugin(ScrollTrigger);
 
-const Hero = () => {
+const Hero = ({ onLaunchDapp }) => {
   const [CurrentIndex, setCurrentIndex] = useState(1);
   const [hasClicked, sethasClicked] = useState(false);
   const [isLoading, setisLoading] = useState(true);
@@ -177,6 +177,7 @@ const Hero = () => {
               title="Launch dapp"
               leftIcon={<TiLocationArrow />}
               containerClass="!bg-yellow-300 flex-center gap-1"
+              onClick={onLaunchDapp}
             />
           </div>
         </div>
