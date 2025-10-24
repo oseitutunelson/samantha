@@ -19,7 +19,7 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
 
     uint64 public subscriptionId;
     bytes32 public donId;
-    uint32 public gasLimit = 300000;
+    uint32 public gasLimit = 500000;
 
     string public matchesSourceCode;
     string public resultsSourceCode;

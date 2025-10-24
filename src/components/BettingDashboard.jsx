@@ -13,6 +13,7 @@ const BettingDashboard = ({ onBackToHome }) => {
   const [contract, setContract] = useState(null);
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   const contractAddress = '0x50cdF50Ca343d7D74c4094930F08299A5C8F930d'; // Update with deployed contract address
 
@@ -32,22 +33,33 @@ const BettingDashboard = ({ onBackToHome }) => {
   useEffect(() => {
     if (walletClient && isConnected) {
       const ethersSigner = new ethers.BrowserProvider(walletClient.transport).getSigner(walletClient.account.address);
-      ethersSigner.then((signer) => {
+      ethersSigner.then(async (signer) => {
         const bettingContract = new ethers.Contract(contractAddress, contractAbi.abi, signer);
         setContract(bettingContract);
+
+        // Check if the connected user is the contract owner
+        try {
+          const owner = await bettingContract.owner();
+          setIsOwner(owner.toLowerCase() === address.toLowerCase());
+        } catch (error) {
+          console.error('Error checking owner:', error);
+          setIsOwner(false);
+        }
       });
     } else {
       setContract(null);
       setMatches([]);
       setSelectedMatch(null);
+      setIsOwner(false);
     }
-  }, [walletClient, isConnected]);
+  }, [walletClient, isConnected, address || '']);
 
   const fetchMatches = async () => {
     if (!contract) return;
 
     try {
-      const length = await contract.getMatchIdsLength();
+      // Get the length of matchIds array
+      const length = await contract.matchIds.length;
       const matchList = [];
       for (let i = 0; i < length; i++) {
         const matchId = await contract.matchIds(i);
@@ -76,9 +88,15 @@ const BettingDashboard = ({ onBackToHome }) => {
       const tx = await contract.requestMatches();
       await tx.wait();
       alert('New matches requested. Please wait for Chainlink Functions to process.');
+      // Refresh matches after requesting new ones
+      setTimeout(() => fetchMatches(), 5000); // Wait 5 seconds for processing
     } catch (error) {
       console.error('Error requesting matches:', error);
-      alert('Failed to request matches. Check console for details.');
+      if (error.message.includes('caller is not the owner')) {
+        alert('Only the contract owner can request new matches. Please contact the platform administrator.');
+      } else {
+        alert('Failed to request matches. Check console for details.');
+      }
     }
   };
 
@@ -90,6 +108,18 @@ const BettingDashboard = ({ onBackToHome }) => {
         console.log('New matches fetched:', matchIds);
         fetchMatches();
       });
+
+      // Auto-fetch matches on component mount
+      const autoFetchMatches = async () => {
+        try {
+          await fetchMatches();
+          console.log('Matches loaded automatically');
+        } catch (error) {
+          console.error('Error auto-fetching matches:', error);
+        }
+      };
+
+      autoFetchMatches();
     }
 
     return () => {
@@ -136,21 +166,27 @@ const BettingDashboard = ({ onBackToHome }) => {
               </p>
               {isConnected && (
                 <div className="mb-8 flex gap-4">
-                  <button
-                    onClick={requestNewMatches}
-                    className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-violet-50
-                    px-7 py-3 text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md
-                    before:absolute before:inset-0 before:z-[-1] before:scale-0 before:rounded-full before:bg-[#edff66] before:transition-transform before:duration-300 before:origin-center hover:before:scale-100"
-                  >
-                    Request New Matches
-                  </button>
+                  {isOwner && (
+                    <button
+                      onClick={requestNewMatches}
+                      className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-violet-50
+                      px-7 py-3 text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md
+                      before:absolute before:inset-0 before:z-[-1] before:scale-0 before:rounded-full before:bg-[#edff66] before:transition-transform before:duration-300 before:origin-center hover:before:scale-100"
+                    >
+                      <span className="relative inline-flex overflow-hidden font-general text-xs uppercase">
+                        Request New Matches
+                      </span>
+                    </button>
+                  )}
                   <button
                     onClick={fetchMatches}
                     className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-violet-50
                     px-7 py-3 text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md
                     before:absolute before:inset-0 before:z-[-1] before:scale-0 before:rounded-full before:bg-[#edff66] before:transition-transform before:duration-300 before:origin-center hover:before:scale-100"
                   >
-                    Refresh Matches
+                    <span className="relative inline-flex overflow-hidden font-general text-xs uppercase">
+                      Refresh Matches
+                    </span>
                   </button>
                 </div>
               )}
@@ -187,6 +223,11 @@ const BettingDashboard = ({ onBackToHome }) => {
             <div className="text-center">
               <h2 className="special-font text-4xl font-black mb-4 text-white">Connect Your Wallet</h2>
               <p className="text-gray-400 font-general">Please connect your wallet using the button in the top right to start betting.</p>
+              {!isOwner && matches.length === 0 && (
+                <p className="text-yellow-400 font-general text-sm mt-4">
+                  Note: Only the contract owner can request new matches. If no matches are available, please contact the platform administrator.
+                </p>
+              )}
             </div>
           </div>
         )}

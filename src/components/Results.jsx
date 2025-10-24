@@ -4,18 +4,22 @@ const Results = ({ contract, account }) => {
   const [bets, setBets] = useState([]);
   const [claimingBet, setClaimingBet] = useState(null);
 
-  // This is a simplified version. In a real app, you'd need to track user's NFT tokens
-  // For now, we'll assume the user has some bet tokens and display them
-
-  const mockBets = [
-    { tokenId: 1, matchId: 123, prediction: 0, amount: 100, resolved: true, won: true },
-    { tokenId: 2, matchId: 124, prediction: 1, amount: 50, resolved: false, won: false },
-  ];
-
   useEffect(() => {
-    // In a real implementation, you'd fetch the user's bet tokens from the NFT contract
-    setBets(mockBets);
-  }, [account]);
+    if (!contract || !account) return;
+
+    const fetchUserBets = async () => {
+      try {
+        // In a real implementation, you'd need to track user's NFT tokens
+        // This would require querying the BetTicketNFT contract for tokens owned by the user
+        // For now, we'll show an empty state until bets are placed
+        setBets([]);
+      } catch (error) {
+        console.error('Error fetching user bets:', error);
+      }
+    };
+
+    fetchUserBets();
+  }, [contract, account]);
 
   const claimReward = async (tokenId) => {
     if (!contract) return;
