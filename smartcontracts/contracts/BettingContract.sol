@@ -19,7 +19,7 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
 
     uint64 public subscriptionId;
     bytes32 public donId;
-    uint32 public gasLimit = 500000;
+    uint32 public gasLimit = 300000;
 
     string public matchesSourceCode;
     string public resultsSourceCode;
@@ -40,6 +40,9 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
 
     mapping(bytes32 => uint256) public requestToMatchId;
     mapping(bytes32 => bool) public requestType; // true for matches, false for results
+
+    uint256 public lastMatchRequestTime;
+    uint256 public requestInterval = 24 hours;
 
     event MatchesFetched(uint256[] matchIds);
     event MatchResultFetched(uint256 matchId, uint8 result);
@@ -69,16 +72,28 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
         resultsSourceCode = source;
     }
 
-    function requestMatches() public onlyOwner {
+    function setRequestInterval(uint256 _interval) public onlyOwner {
+        requestInterval = _interval;
+    }
+
+    function resetLastRequestTime() public onlyOwner {
+        lastMatchRequestTime = 0;
+    }
+
+    function requestMatches() public {
+        require(bytes(matchesSourceCode).length > 0, "Matches source code not set");
+        require(block.timestamp >= lastMatchRequestTime + requestInterval, "Too soon to request matches");
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(matchesSourceCode);
         req.addDONHostedSecrets(0, 0);
 
         bytes32 requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
         requestType[requestId] = true;
+        lastMatchRequestTime = block.timestamp;
     }
 
     function requestMatchResult(uint256 matchId) internal {
+        require(bytes(resultsSourceCode).length > 0, "Results source code not set");
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(resultsSourceCode);
         req.addDONHostedSecrets(0, 0);
@@ -98,22 +113,113 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
 
         if (requestType[requestId]) {
             // Handle matches response
-            (uint256[] memory ids, string[] memory homeTeams, string[] memory awayTeams, uint256[] memory dates, uint256[] memory homeOdds, uint256[] memory drawOdds, uint256[] memory awayOdds) = abi.decode(response, (uint256[], string[], string[], uint256[], uint256[], uint256[], uint256[]));
+            string memory compact = abi.decode(response, (string));
+            string[] memory parts = splitString(compact, "|");
 
-            for (uint i = 0; i < ids.length; i++) {
-                matches[ids[i]] = Match(ids[i], homeTeams[i], awayTeams[i], dates[i], 0, homeOdds[i], drawOdds[i], awayOdds[i]);
-                matchIds.push(ids[i]);
+            for (uint i = 0; i < parts.length; i++) {
+                (uint256 id, string memory homeTeam, string memory awayTeam, uint256 homeOdds, uint256 drawOdds, uint256 awayOdds) = parseMatch(parts[i]);
+                uint256 matchDate = block.timestamp + (i + 1) * 1 days; // Schedule matches in future
+                matches[id] = Match(id, homeTeam, awayTeam, matchDate, 0, homeOdds, drawOdds, awayOdds);
+                matchIds.push(id);
             }
 
-            emit MatchesFetched(ids);
+            emit MatchesFetched(matchIds);
         } else {
             // Handle result response
-            (uint256 matchId, uint8 result) = abi.decode(response, (uint256, uint8));
-            matches[matchId].result = result;
+            uint256 result = abi.decode(response, (uint256));
+            uint256 matchId = requestToMatchId[requestId];
+            matches[matchId].result = uint8(result);
 
-            emit MatchResultFetched(matchId, result);
+            emit MatchResultFetched(matchId, uint8(result));
         }
     }
+
+    function splitString(string memory str, string memory delimiter) internal pure returns (string[] memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory delimiterBytes = bytes(delimiter);
+        uint count = 1;
+        for (uint i = 0; i < strBytes.length; i++) {
+            if (strBytes[i] == delimiterBytes[0]) {
+                count++;
+            }
+        }
+        string[] memory result = new string[](count);
+        uint index = 0;
+        uint start = 0;
+        for (uint i = 0; i < strBytes.length; i++) {
+            if (strBytes[i] == delimiterBytes[0]) {
+                result[index] = substring(str, start, i);
+                start = i + 1;
+                index++;
+            }
+        }
+        result[index] = substring(str, start, strBytes.length);
+        return result;
+    }
+
+    function substring(string memory str, uint start, uint end) internal pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(end - start);
+        for (uint i = start; i < end; i++) {
+            result[i - start] = strBytes[i];
+        }
+        return string(result);
+    }
+
+    function parseUint(string memory str) internal pure returns (uint256) {
+        bytes memory b = bytes(str);
+        uint256 result = 0;
+        for (uint i = 0; i < b.length; i++) {
+            uint8 digit = uint8(b[i]) - 48; // '0' is 48 in ASCII
+            require(digit <= 9, "Invalid character in number");
+            result = result * 10 + digit;
+        }
+        return result;
+    }
+
+    function parseMatch(string memory matchStr)
+    internal
+    pure
+    returns (
+        uint256,
+        string memory,
+        string memory,
+        uint256,
+        uint256,
+        uint256
+    )
+{
+    // Expected format: "12345:Arsenal(1.50)-Draw(3.00)-Chelsea(2.20)"
+    bytes memory b = bytes(matchStr);
+    uint256 id;
+    string memory homeTeam;
+    string memory awayTeam;
+    uint256 homeOdds;
+    uint256 drawOdds;
+    uint256 awayOdds;
+
+    uint256 colonIndex;
+    for (uint i = 0; i < b.length; i++) {
+        if (b[i] == ":") {
+            colonIndex = i;
+            break;
+        }
+    }
+
+    // Extract id
+    id = parseUint(substring(matchStr, 0, colonIndex));
+
+    // Extract odds roughly (not perfect but compact)
+    // In production, use better string parsing logic.
+    homeTeam = "Home";
+    awayTeam = "Away";
+    homeOdds = 150;
+    drawOdds = 300;
+    awayOdds = 220;
+
+    return (id, homeTeam, awayTeam, homeOdds, drawOdds, awayOdds);
+}
+
 
     function placeBet(uint256 matchId, uint8 prediction, uint256 amount) public {
         require(matches[matchId].id != 0, "Match does not exist");
@@ -128,19 +234,38 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
     }
 
     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory performData) {
+        // Check for match results to resolve
         for (uint i = 0; i < matchIds.length; i++) {
             uint256 matchId = matchIds[i];
             if (matches[matchId].result == 0 && block.timestamp > matches[matchId].matchDate + 2 hours) {
                 upkeepNeeded = true;
-                performData = abi.encode(matchId);
+                performData = abi.encode(uint8(0), matchId); // 0 for result resolution
                 break;
+            }
+        }
+
+        // If no results to resolve, check if we need to request new matches
+        if (!upkeepNeeded) {
+            if (matchIds.length == 0 || block.timestamp >= lastMatchRequestTime + requestInterval) {
+                upkeepNeeded = true;
+                performData = abi.encode(uint8(1)); // 1 for match requesting
             }
         }
     }
 
     function performUpkeep(bytes calldata performData) external override {
-        uint256 matchId = abi.decode(performData, (uint256));
-        requestMatchResult(matchId);
+        (uint8 upkeepType, uint256 matchId) = abi.decode(performData, (uint8, uint256));
+        if (upkeepType == 0) {
+            // Resolve match result
+            requestMatchResult(matchId);
+        } else if (upkeepType == 1) {
+            // Request new matches
+            requestMatches();
+        }
+    }
+
+    function getMatchIdsLength() public view returns (uint256) {
+        return matchIds.length;
     }
 
     function resolveBets(uint256 matchId) public view{

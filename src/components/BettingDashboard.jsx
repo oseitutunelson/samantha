@@ -15,26 +15,15 @@ const BettingDashboard = ({ onBackToHome }) => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
 
-  const contractAddress = '0x50cdF50Ca343d7D74c4094930F08299A5C8F930d'; // Update with deployed contract address
+  const contractAddress = '0xeCC7EFdaD35b246fF40d55FA68e68e829bE194Ac'; // Update with deployed contract address
 
-  const contractABI = [
-    // Add relevant ABI entries for the functions we'll use
-    "function requestMatches() public onlyOwner",
-    "function placeBet(uint256 matchId, uint8 prediction, uint256 amount) public",
-    "function claimReward(uint256 tokenId) public",
-    "function matches(uint256) public view returns (uint256, string, string, uint256, uint8, uint256, uint256, uint256)",
-    "function matchIds(uint256) public view returns (uint256)",
-    "function getMatchIdsLength() public view returns (uint256)",
-    "event MatchesFetched(uint256[] matchIds)",
-    "event BetPlaced(address user, uint256 tokenId, uint256 matchId, uint8 prediction, uint256 amount)",
-    "event BetResolved(uint256 tokenId, bool won, uint256 payout)"
-  ];
+const contractABI = contractAbi.abi;
 
   useEffect(() => {
     if (walletClient && isConnected) {
       const ethersSigner = new ethers.BrowserProvider(walletClient.transport).getSigner(walletClient.account.address);
       ethersSigner.then(async (signer) => {
-        const bettingContract = new ethers.Contract(contractAddress, contractAbi.abi, signer);
+        const bettingContract = new ethers.Contract(contractAddress, contractABI, signer);
         setContract(bettingContract);
 
         // Check if the connected user is the contract owner
@@ -59,11 +48,14 @@ const BettingDashboard = ({ onBackToHome }) => {
 
     try {
       // Get the length of matchIds array
-      const length = await contract.matchIds.length;
+      const length = await contract.getMatchIdsLength();
+      console.log('Match IDs length:', length);
       const matchList = [];
       for (let i = 0; i < length; i++) {
         const matchId = await contract.matchIds(i);
+        console.log('Fetching match ID:', matchId);
         const match = await contract.matches(matchId);
+        console.log('Match data:', match);
         matchList.push({
           id: match[0],
           homeTeam: match[1],
@@ -76,38 +68,28 @@ const BettingDashboard = ({ onBackToHome }) => {
         });
       }
       setMatches(matchList);
+      console.log('Fetched matches:', matchList.length);
     } catch (error) {
       console.error('Error fetching matches:', error);
-    }
-  };
-
-  const requestNewMatches = async () => {
-    if (!contract) return;
-
-    try {
-      const tx = await contract.requestMatches();
-      await tx.wait();
-      alert('New matches requested. Please wait for Chainlink Functions to process.');
-      // Refresh matches after requesting new ones
-      setTimeout(() => fetchMatches(), 5000); // Wait 5 seconds for processing
-    } catch (error) {
-      console.error('Error requesting matches:', error);
-      if (error.message.includes('caller is not the owner')) {
-        alert('Only the contract owner can request new matches. Please contact the platform administrator.');
-      } else {
-        alert('Failed to request matches. Check console for details.');
+      console.error('Error details:', error.message);
+      if (error.data) {
+        console.error('Error data:', error.data);
       }
     }
   };
+
+  // Removed requestNewMatches function as matches are now automated
 
   useEffect(() => {
     if (contract) {
       fetchMatches();
       // Set up event listeners for real-time updates
-      contract.on('MatchesFetched', (matchIds) => {
+      const handleMatchesFetched = (matchIds) => {
         console.log('New matches fetched:', matchIds);
         fetchMatches();
-      });
+      };
+
+      contract.on('MatchesFetched', handleMatchesFetched);
 
       // Auto-fetch matches on component mount
       const autoFetchMatches = async () => {
@@ -120,13 +102,13 @@ const BettingDashboard = ({ onBackToHome }) => {
       };
 
       autoFetchMatches();
-    }
 
-    return () => {
-      if (contract) {
-        contract.removeAllListeners();
-      }
-    };
+      return () => {
+        if (contract) {
+          contract.off('MatchesFetched', handleMatchesFetched);
+        }
+      };
+    }
   }, [contract]);
 
   return (
@@ -166,18 +148,6 @@ const BettingDashboard = ({ onBackToHome }) => {
               </p>
               {isConnected && (
                 <div className="mb-8 flex gap-4">
-                  {isOwner && (
-                    <button
-                      onClick={requestNewMatches}
-                      className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-violet-50
-                      px-7 py-3 text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md
-                      before:absolute before:inset-0 before:z-[-1] before:scale-0 before:rounded-full before:bg-[#edff66] before:transition-transform before:duration-300 before:origin-center hover:before:scale-100"
-                    >
-                      <span className="relative inline-flex overflow-hidden font-general text-xs uppercase">
-                        Request New Matches
-                      </span>
-                    </button>
-                  )}
                   <button
                     onClick={fetchMatches}
                     className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-violet-50
@@ -190,6 +160,23 @@ const BettingDashboard = ({ onBackToHome }) => {
                   </button>
                 </div>
               )}
+              {isOwner && (
+  <button
+    onClick={async () => {
+      try {
+        const tx = await contract.requestMatches();
+        await tx.wait();
+        alert("Requested new matches from Chainlink!");
+      } catch (e) {
+        console.error(e);
+      }
+    }}
+    className="mt-4 bg-green-600 px-4 py-2 rounded"
+  >
+    Fetch Matches (Owner Only)
+  </button>
+)}
+
             </div>
           </div>
         </div>
@@ -223,11 +210,9 @@ const BettingDashboard = ({ onBackToHome }) => {
             <div className="text-center">
               <h2 className="special-font text-4xl font-black mb-4 text-white">Connect Your Wallet</h2>
               <p className="text-gray-400 font-general">Please connect your wallet using the button in the top right to start betting.</p>
-              {!isOwner && matches.length === 0 && (
-                <p className="text-yellow-400 font-general text-sm mt-4">
-                  Note: Only the contract owner can request new matches. If no matches are available, please contact the platform administrator.
-                </p>
-              )}
+              <p className="text-yellow-400 font-general text-sm mt-4">
+                Matches are loaded automatically. If none are available, they will be fetched soon.
+              </p>
             </div>
           </div>
         )}

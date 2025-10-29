@@ -9,7 +9,7 @@ async function main() {
   console.log("Setting up Chainlink Functions...");
 
   // Contract addresses from deployment
-  const bettingContractAddress = "0x50cdF50Ca343d7D74c4094930F08299A5C8F930d";
+  const bettingContractAddress = "0xeCC7EFdaD35b246fF40d55FA68e68e829bE194Ac";
 
   // Get the deployed contract
   const BettingContract = await ethers.getContractFactory("BettingContract");
@@ -17,32 +17,44 @@ async function main() {
 
   // JavaScript source code for fetching matches
   const matchesSourceCode = `
-    const apiKey = "d752945a57514a439d2fa74e8b2db2ae";  
-    const url = "https://api.football-data.org/v4/matches?status=SCHEDULED&limit=10";
+  const API_KEY = "d752945a57514a439d2fa74e8b2db2ae"; 
+    const date = new Date().toISOString().split("T")[0]; // today's date
+    const url = \`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=\${date}&dateTo=\${date}\`;
+
+    const headers = { "X-Auth-Token": API_KEY };
 
     const response = await Functions.makeHttpRequest({
-      url: url,
-      headers: {
-        "X-Auth-Token": apiKey
-      }
+      url,
+      headers,
     });
 
-    if (response.error) {
-      throw Error("Request failed");
+    if (!response || !response.data) {
+      throw new Error("API request failed");
     }
 
-    const data = response.data;
-    const matches = data.matches.map(match => ({
-      id: match.id,
-      homeTeam: match.homeTeam.name,
-      awayTeam: match.awayTeam.name,
-      matchDate: Math.floor(new Date(match.utcDate).getTime() / 1000),
-      homeOdds: 200, // Default odds
-      drawOdds: 300,
-      awayOdds: 200
-    }));
+    const matches = response.data.matches;
+    if (!matches || matches.length === 0) {
+      throw new Error("No matches found today");
+    }
 
-    return Functions.encodeString(JSON.stringify(matches));
+    // Generate compact odds (random for now)
+    const results = matches.slice(0, 5).map((match) => {
+      const home = match.homeTeam.shortName;
+      const away = match.awayTeam.shortName;
+      const matchId = match.id;
+
+      // Custom random odds
+      const homeOdds = (Math.random() * 2 + 1).toFixed(2);
+      const drawOdds = (Math.random() * 2 + 2).toFixed(2);
+      const awayOdds = (Math.random() * 2 + 1).toFixed(2);
+
+      return \`\${matchId}:\${home}(\${homeOdds})-Draw(\${drawOdds})-\${away}(\${awayOdds})\`;
+    });
+
+    // Compress data to stay under 256 bytes
+    const compact = results.join("|").slice(0, 250);
+
+    return Functions.encodeString(compact);
   `;
 
   // JavaScript source code for fetching match results

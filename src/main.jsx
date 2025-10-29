@@ -11,7 +11,7 @@ import App from './App.jsx'
 const config = getDefaultConfig({
   appName: 'EPL Betting Platform',
   projectId: '2adfca29ecc73c623bd3ed49c7b66ec7', // Get one at https://cloud.walletconnect.com
-  chains: [mainnet, polygonAmoy],
+  chains: [polygonAmoy],
   ssr: false, // If your dApp uses server side rendering (SSR)
 });
 

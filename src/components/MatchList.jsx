@@ -5,7 +5,7 @@ const MatchList = ({ matches, onSelectMatch }) => {
     <div className="match-list">
       <h2 className="special-font text-3xl font-black mb-6 text-white">Available Matches</h2>
       {matches.length === 0 ? (
-        <p className="text-gray-400 font-general">No matches available. Request new matches to get started.</p>
+        <p className="text-gray-400 font-general">No matches available. Matches are loaded automatically. If none are available, they will be fetched soon.</p>
       ) : (
         <div className="space-y-6">
           {matches.map((match) => (

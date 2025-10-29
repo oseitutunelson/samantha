@@ -9,7 +9,7 @@ async function main() {
   console.log("Setting up Chainlink Automation...");
 
   // Contract addresses from deployment
-  const bettingContractAddress = "0x50cdF50Ca343d7D74c4094930F08299A5C8F930d";
+  const bettingContractAddress = "0xeCC7EFdaD35b246fF40d55FA68e68e829bE194Ac";
 
   // Chainlink Automation Registry for Polygon Amoy
   const automationRegistryAddress = "0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad8"; // Amoy Automation Registry
