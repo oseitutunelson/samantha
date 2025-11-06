@@ -17,7 +17,7 @@ contract BetTicketNFT is ERC721, Ownable {
 
     mapping(uint256 => BetDetails) public betDetails;
 
-    constructor() ERC721("BetTicketNFT", "BETNFT") Ownable(msg.sender) {}
+    constructor() ERC721("BetTicketNFT", "BETNFT") Ownable() {}
 
     function mintBetTicket(
         address to,

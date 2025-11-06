@@ -9,9 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@chainlink/automation-toolkit": "^0.1.0",
-    "@chainlink/contracts": "^1.2.0",
-    "@chainlink/functions-toolkit": "^0.4.0",
+    "@chainlink/contracts": "^1.5.0",
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
     "@types/chai": "^4.3.20",
@@ -19,11 +17,18 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.18.12",
     "chai": "^5.3.3",
-    "ethers": "^6.15.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.9",
     "mocha": "^11.7.4",
     "typescript": "~5.8.0"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@chainlink/functions-toolkit": "^0.3.2",
+    "@nomicfoundation/hardhat-ethers": "^4.0.2",
+    "axios": "^1.13.1",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.15.0",
+    "ethers-v5": "npm:ethers@^5.8.0"
+  }
 }

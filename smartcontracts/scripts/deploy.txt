@@ -1,7 +1,12 @@
-USDT deployed to: 0xe9AB7671966Ff770938b49d3A65DD259F7c2498E
-BettingToken deployed to: 0x19ea61BE98D2E59672e9260a5034D04469b4fC41
-BetTicketNFT deployed to: 0x205C351C86Fc1073a7709Fa1dc6e534548ff08bB
+Deploying Betting Platform contracts...
+USDT deployed to: 0x11a59302bf6e60d27503Ad7a738EaC1785b7D17E
+BettingToken deployed to: 0x55C207e0070ca1C9AE3800CA5015a900a9ACe097
+BetTicketNFT deployed to: 0xE89E4eCe8010b1cB7Fb4c7b1C68671FFb5585296
 Router Address: 0xC22a79eBA640940ABB6dF0f7982cc119578E11De
 Subscription ID: 489
 DON ID: 0x66756e2d706f6c79676f6e2d616d6f792d310000000000000000000000000000
-BettingContract deployed to: 0xeCC7EFdaD35b246fF40d55FA68e68e829bE194Ac
+BettingContract deployed to: 0x7EecC8E10B83222816499835820B7727fd6F046e
+Deployment completed!
+
+ Secrets uploaded to IPFS!
+🔗 IPFS URL: https://ipfs.io/ipfs/QmUgRBt3qCpLbL7YxGKT7yB67fjqmbQhMvoiKXUa8ZpBPh

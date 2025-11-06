@@ -42,7 +42,10 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
     mapping(bytes32 => bool) public requestType; // true for matches, false for results
 
     uint256 public lastMatchRequestTime;
-    uint256 public requestInterval = 24 hours;
+    uint256 public requestInterval = 10 seconds;
+
+    uint8 public secretsLocation; // 0 = DON hosted, 1 = inline, 255 = no secrets
+    bytes public encryptedSecretsReference; // For DON: version as bytes8, For inline: encrypted secrets
 
     event MatchesFetched(uint256[] matchIds);
     event MatchResultFetched(uint256 matchId, uint8 result);
@@ -56,12 +59,19 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
         address _bettingToken,
         address _betTicketNFT,
         address _usdt
-    ) FunctionsClient(router) Ownable(msg.sender) {
+    ) FunctionsClient(router) Ownable() {
         subscriptionId = _subscriptionId;
         donId = _donId;
         bettingToken = BettingToken(_bettingToken);
         betTicketNFT = BetTicketNFT(_betTicketNFT);
         usdt = USDT(_usdt);
+        secretsLocation = 255; // Default: no secrets (API key in source code)
+    }
+
+    function setSecretsReference(uint8 _location, bytes calldata _reference) external onlyOwner {
+        require(_location <= 255, "Invalid secrets location");
+        secretsLocation = _location;
+        encryptedSecretsReference = _reference;
     }
 
     function setMatchesSource(string memory source) public onlyOwner {
@@ -81,11 +91,22 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
     }
 
     function requestMatches() public {
-        require(bytes(matchesSourceCode).length > 0, "Matches source code not set");
-        require(block.timestamp >= lastMatchRequestTime + requestInterval, "Too soon to request matches");
+        require(bytes(matchesSourceCode).length > 0, "Matches source not set");
+        require(block.timestamp >= lastMatchRequestTime + requestInterval, "Too soon");
+
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(matchesSourceCode);
-        req.addDONHostedSecrets(0, 0);
+
+        // 🔧 FIXED: Only add secrets if configured (not 255)
+        if (secretsLocation == 0 && encryptedSecretsReference.length > 0) {
+            // DON-hosted secrets: decode version from encryptedSecretsReference
+            uint64 version = bytesToUint64(encryptedSecretsReference);
+            req.addDONHostedSecrets(0, version); // slot 0, actual version
+        } else if (secretsLocation == 1 && encryptedSecretsReference.length > 0) {
+            // Inline secrets
+            req.addSecretsReference(encryptedSecretsReference);
+        }
+        // If secretsLocation == 255 or reference is empty, no secrets are added
 
         bytes32 requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
         requestType[requestId] = true;
@@ -93,10 +114,19 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
     }
 
     function requestMatchResult(uint256 matchId) internal {
-        require(bytes(resultsSourceCode).length > 0, "Results source code not set");
+        require(bytes(resultsSourceCode).length > 0, "Results source not set");
+
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(resultsSourceCode);
-        req.addDONHostedSecrets(0, 0);
+
+        // 🔧 FIXED: Only add secrets if configured
+        if (secretsLocation == 0 && encryptedSecretsReference.length > 0) {
+            uint64 version = bytesToUint64(encryptedSecretsReference);
+            req.addDONHostedSecrets(0, version);
+        } else if (secretsLocation == 1 && encryptedSecretsReference.length > 0) {
+            req.addSecretsReference(encryptedSecretsReference);
+        }
+
         string[] memory args = new string[](1);
         args[0] = string(abi.encodePacked(matchId));
         req.setArgs(args);
@@ -104,6 +134,16 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
         bytes32 requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
         requestToMatchId[requestId] = matchId;
         requestType[requestId] = false;
+    }
+
+    // 🔧 NEW: Helper function to decode version from bytes
+    function bytesToUint64(bytes memory b) internal pure returns (uint64) {
+        require(b.length >= 8, "Invalid bytes length");
+        uint64 result = 0;
+        for (uint i = 0; i < 8; i++) {
+            result = result | (uint64(uint8(b[i])) << (8 * (7 - i)));
+        }
+        return result;
     }
 
     function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
@@ -114,13 +154,22 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
         if (requestType[requestId]) {
             // Handle matches response
             string memory compact = abi.decode(response, (string));
+
+            // If no matches, just emit empty array
+            if (bytes(compact).length == 0) {
+                emit MatchesFetched(matchIds);
+                return;
+            }
+
             string[] memory parts = splitString(compact, "|");
 
             for (uint i = 0; i < parts.length; i++) {
-                (uint256 id, string memory homeTeam, string memory awayTeam, uint256 homeOdds, uint256 drawOdds, uint256 awayOdds) = parseMatch(parts[i]);
-                uint256 matchDate = block.timestamp + (i + 1) * 1 days; // Schedule matches in future
-                matches[id] = Match(id, homeTeam, awayTeam, matchDate, 0, homeOdds, drawOdds, awayOdds);
-                matchIds.push(id);
+                if (bytes(parts[i]).length > 0) {
+                    (uint256 id, string memory homeTeam, string memory awayTeam, uint256 homeOdds, uint256 drawOdds, uint256 awayOdds) = parseMatch(parts[i]);
+                    uint256 matchDate = block.timestamp + (i + 1) * 1 days; // Schedule matches in future
+                    matches[id] = Match(id, homeTeam, awayTeam, matchDate, 0, homeOdds, drawOdds, awayOdds);
+                    matchIds.push(id);
+                }
             }
 
             emit MatchesFetched(matchIds);
@@ -178,48 +227,107 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
     }
 
     function parseMatch(string memory matchStr)
-    internal
-    pure
-    returns (
-        uint256,
-        string memory,
-        string memory,
-        uint256,
-        uint256,
-        uint256
-    )
-{
-    // Expected format: "12345:Arsenal(1.50)-Draw(3.00)-Chelsea(2.20)"
-    bytes memory b = bytes(matchStr);
-    uint256 id;
-    string memory homeTeam;
-    string memory awayTeam;
-    uint256 homeOdds;
-    uint256 drawOdds;
-    uint256 awayOdds;
+        internal
+        pure
+        returns (
+            uint256,
+            string memory,
+            string memory,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        // Expected format: "12345:Arsenal(1.50)-Draw(3.00)-Chelsea(2.20)"
+        bytes memory b = bytes(matchStr);
+        uint256 id;
+        string memory homeTeam;
+        string memory awayTeam;
+        uint256 homeOdds;
+        uint256 drawOdds;
+        uint256 awayOdds;
 
-    uint256 colonIndex;
-    for (uint i = 0; i < b.length; i++) {
-        if (b[i] == ":") {
-            colonIndex = i;
-            break;
+        uint256 colonIndex;
+        for (uint i = 0; i < b.length; i++) {
+            if (b[i] == ":") {
+                colonIndex = i;
+                break;
+            }
         }
+
+        // Extract id
+        id = parseUint(substring(matchStr, 0, colonIndex));
+
+        // Extract teams and odds from the rest of the string
+        string memory rest = substring(matchStr, colonIndex + 1, b.length);
+
+        // Split by '-' to get home, draw, away parts
+        string[] memory parts = splitString(rest, "-");
+
+        if (parts.length >= 3) {
+            // Parse home team and odds
+            (homeTeam, homeOdds) = parseTeamAndOdds(parts[0]);
+
+            // Parse draw odds
+            if (bytes(parts[1]).length > 5) { // "Draw("
+                string memory drawPart = substring(parts[1], 5, bytes(parts[1]).length - 1); // Remove "Draw(" and ")"
+                drawOdds = parseOdds(drawPart);
+            } else {
+                drawOdds = 300;
+            }
+
+            // Parse away team and odds
+            (awayTeam, awayOdds) = parseTeamAndOdds(parts[2]);
+        } else {
+            // Fallback
+            homeTeam = "Home";
+            awayTeam = "Away";
+            homeOdds = 150;
+            drawOdds = 300;
+            awayOdds = 220;
+        }
+
+        return (id, homeTeam, awayTeam, homeOdds, drawOdds, awayOdds);
     }
 
-    // Extract id
-    id = parseUint(substring(matchStr, 0, colonIndex));
+    function parseTeamAndOdds(string memory teamOddsStr) internal pure returns (string memory team, uint256 odds) {
+        bytes memory b = bytes(teamOddsStr);
+        uint256 parenIndex;
+        for (uint i = 0; i < b.length; i++) {
+            if (b[i] == "(") {
+                parenIndex = i;
+                break;
+            }
+        }
 
-    // Extract odds roughly (not perfect but compact)
-    // In production, use better string parsing logic.
-    homeTeam = "Home";
-    awayTeam = "Away";
-    homeOdds = 150;
-    drawOdds = 300;
-    awayOdds = 220;
+        team = substring(teamOddsStr, 0, parenIndex);
+        string memory oddsStr = substring(teamOddsStr, parenIndex + 1, b.length - 1);
+        odds = parseOdds(oddsStr);
+    }
 
-    return (id, homeTeam, awayTeam, homeOdds, drawOdds, awayOdds);
-}
+    function parseOdds(string memory oddsStr) internal pure returns (uint256) {
+        // Convert decimal odds like "1.50" to integer like 150
+        bytes memory b = bytes(oddsStr);
+        uint256 dotIndex;
+        bool hasDot = false;
+        for (uint i = 0; i < b.length; i++) {
+            if (b[i] == ".") {
+                dotIndex = i;
+                hasDot = true;
+                break;
+            }
+        }
 
+        if (hasDot) {
+            string memory wholePart = substring(oddsStr, 0, dotIndex);
+            string memory decimalPart = substring(oddsStr, dotIndex + 1, b.length);
+            uint256 whole = parseUint(wholePart);
+            uint256 decimal = parseUint(decimalPart);
+            return whole * 100 + decimal;
+        } else {
+            return parseUint(oddsStr) * 100;
+        }
+    }
 
     function placeBet(uint256 matchId, uint8 prediction, uint256 amount) public {
         require(matches[matchId].id != 0, "Match does not exist");
@@ -246,7 +354,9 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
 
         // If no results to resolve, check if we need to request new matches
         if (!upkeepNeeded) {
-            if (matchIds.length == 0 || block.timestamp >= lastMatchRequestTime + requestInterval) {
+            // Always try to request matches if interval passed, even if we have matches
+            // This allows updating with latest matches
+            if (block.timestamp >= lastMatchRequestTime + requestInterval) {
                 upkeepNeeded = true;
                 performData = abi.encode(uint8(1)); // 1 for match requesting
             }
@@ -260,6 +370,8 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
             requestMatchResult(matchId);
         } else if (upkeepType == 1) {
             // Request new matches
+            // Clear existing matches first to avoid duplicates
+            delete matchIds;
             requestMatches();
         }
     }
@@ -268,7 +380,7 @@ contract BettingContract is FunctionsClient, AutomationCompatibleInterface, Owna
         return matchIds.length;
     }
 
-    function resolveBets(uint256 matchId) public view{
+    function resolveBets(uint256 matchId) public view {
         require(matches[matchId].result > 0, "Match not resolved yet");
 
         // This would be called after fulfillRequest updates the result

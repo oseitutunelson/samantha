@@ -9,7 +9,7 @@ async function main() {
   console.log("Checking BettingContract state...");
 
   // Contract address from deployment
-  const bettingContractAddress = "0x4B8edD154ff565E5972AaAe52d5607FbCf6BAeE0";
+  const bettingContractAddress = "0xeCC7EFdaD35b246fF40d55FA68e68e829bE194Ac";
 
   // Get the deployed contract
   const BettingContract = await ethers.getContractFactory("BettingContract");
@@ -31,7 +31,7 @@ async function main() {
     const lastTime = await bettingContract.lastMatchRequestTime();
     console.log("Last match request time:", new Date(Number(lastTime) * 1000).toISOString());
 
-    const matchIdsLength = await bettingContract.matchIds.length;
+    const matchIdsLength = await bettingContract.getMatchIdsLength();
     console.log("Number of match IDs:", matchIdsLength.toString());
 
     const owner = await bettingContract.owner();
