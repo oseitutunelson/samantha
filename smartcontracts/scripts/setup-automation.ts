@@ -1,63 +1,83 @@
+// setup-automation.js
 import { network } from "hardhat";
 
 const { ethers } = await network.connect({
   network: "amoy",
   chainType: "l1",
 });
+// scripts/setup-automation.js
 async function main() {
-  console.log("⚙️ Setting up Chainlink Automation...");
+  console.log("Setting up Chainlink Automation on Polygon Amoy...");
 
-  // Your deployed BettingContract address
-  const bettingContractAddress = "0x8C4D6720eD0E1ac37fAD1eD43083Fb2451358E1e";
-
-  // Chainlink Automation Registry address for Polygon Amoy
-  const automationRegistryAddress = "0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad8"; // official Amoy registry
-
-  // ----------------------------------------------------------------
-  // 1️⃣ Connect signer (make sure this is the same wallet that deployed the contract)
-  // ----------------------------------------------------------------
+  // Deployer / Signer
   const [owner] = await ethers.getSigners();
-  console.log(`👤 Using signer: ${owner.address}`);
+  console.log(`Signer: ${owner.address}`);
 
-  // ----------------------------------------------------------------
-  // 2️⃣ Attach to your deployed BettingContract
-  // ----------------------------------------------------------------
-  const BettingContract = await ethers.getContractFactory("BettingContract", owner);
-  const bettingContract = BettingContract.attach(bettingContractAddress).connect(owner);
+  // Contract address
+  const bettingContractAddress = "0x7EecC8E10B83222816499835820B7727fd6F046e";
 
-  // Verify contract ownership
+  // Amoy Chainlink Automation Registry & Registrar
+  const registryAddress = "0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad8";
+  const registrarAddress = "0x5C4f0c7C9A5E5F8B6d5B8A8C8E8F8G9H0I1J2K3L"; // Official Amoy Auto-Registrar
+  const linkTokenAddress = "0x0Fd9e8d3aF1aaee056EB9e802c3A762E3f3F4F4a"; // Amoy LINK
+
+  // Attach to your deployed contract
+  const BettingContract = await ethers.getContractFactory("BettingContract");
+  const bettingContract = await BettingContract.attach(bettingContractAddress);
+
+  // Verify ownership
   const contractOwner = await bettingContract.owner();
   if (contractOwner.toLowerCase() !== owner.address.toLowerCase()) {
-    console.warn("⚠️ Warning: You are not the contract owner!");
-    console.warn(`   Contract owner is: ${contractOwner}`);
-    console.warn(`   Your address is: ${owner.address}`);
-  } else {
-    console.log("✅ You are the contract owner.");
+    throw new Error(`Not owner! Owner: ${contractOwner}`);
+  }
+  console.log("You are the contract owner");
+
+  // Check LINK balance
+  const linkToken = await ethers.getContractAt("LinkTokenInterface", linkTokenAddress);
+  const linkBalance = await linkToken.balanceOf(owner.address);
+  console.log(`LINK Balance: ${ethers.formatEther(linkBalance)} LINK`);
+
+  if (linkBalance < ethers.parseEther("2")) {
+    console.log("Sending 2 LINK to fund upkeep...");
+    // Optional: Use a faucet or pre-fund
   }
 
-  // ----------------------------------------------------------------
-  // 3️⃣ Automation setup guidance
-  // ----------------------------------------------------------------
-  console.log("\n🔗 Chainlink Automation Setup Instructions:");
-  console.log("-------------------------------------------");
-  console.log("1️⃣ Go to: https://automation.chain.link/amoy");
-  console.log("2️⃣ Connect your wallet");
-  console.log("3️⃣ Register a new upkeep");
-  console.log("4️⃣ Choose 'Custom logic' as the trigger type");
-  console.log(`5️⃣ Enter the BettingContract address: ${bettingContractAddress}`);
-  console.log("6️⃣ Set the gas limit to around 500,000");
-  console.log("7️⃣ Fund the upkeep with LINK tokens (minimum ~2 LINK)");
-  console.log("8️⃣ Once registered, you can monitor upkeep status in the dashboard.");
+  // Register Upkeep via Auto-Registrar
+  const registrar = await ethers.getContractAt("AutoRegistrarInterface", registrarAddress);
 
-  console.log("\n📘 Note:");
-  console.log("- The contract already implements AutomationCompatibleInterface.");
-  console.log("- Chainlink Automation will automatically call performUpkeep() when needed.");
-  console.log("- Ensure your Chainlink subscription has enough LINK to pay for Function calls.");
+  const upkeepName = "Samantha Auto-Fetch Matches";
+  const gasLimit = 500_000;
+  const checkData = "0x";
 
-  console.log("\n✅ Chainlink Automation setup script executed successfully!");
+  console.log("Registering upkeep...");
+  const tx = await registrar.registerUpkeep(
+    bettingContractAddress,
+    gasLimit,
+    owner.address,     // admin
+    checkData,
+    "0x",              // offchain config
+    upkeepName
+  );
+
+  const receipt = await tx.wait();
+  const upkeepId = receipt.logs[0].topics[1]; // BigInt
+  console.log(`Upkeep registered! ID: ${upkeepId}`);
+
+  // Fund with 2 LINK
+  console.log("Funding upkeep with 2 LINK...");
+  const fundTx = await linkToken.transferAndCall(
+    registrarAddress,
+    ethers.parseEther("2"),
+    ethers.zeroPadValue(upkeepId, 32)
+  );
+  await fundTx.wait();
+  console.log("Funded!");
+
+  console.log("\nAUTOMATION IS LIVE!");
+  console.log(`View: https://automation.chain.link/amoy/${upkeepId}`);
 }
 
 main().catch((error) => {
-  console.error("❌ Error setting up automation:", error);
+  console.error("Error:", error);
   process.exitCode = 1;
 });

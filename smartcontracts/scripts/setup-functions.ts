@@ -9,7 +9,7 @@ async function main() {
   console.log("🔧 Setting up Chainlink Functions (Upcoming Matches)...");
 
   const [owner] = await ethers.getSigners();
-  const bettingContractAddress = "0x7EecC8E10B83222816499835820B7727fd6F046e";
+  const bettingContractAddress = "0xB8530571346B601f2f291B1298C3F46D7F7c480C";
 
   const BettingContract = await ethers.getContractFactory("BettingContract", owner);
   const bettingContract = BettingContract.attach(bettingContractAddress).connect(owner);
@@ -28,7 +28,7 @@ async function main() {
     const dateFrom = today.toISOString().split("T")[0];
     
     const future = new Date();
-    future.setDate(future.getDate() + 7);
+    future.setDate(future.getDate() + 14);
     const dateTo = future.toISOString().split("T")[0];
     
     const url = \`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=\${dateFrom}&dateTo=\${dateTo}&status=SCHEDULED\`;

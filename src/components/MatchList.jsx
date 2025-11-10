@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const MatchList = ({ matches, onSelectMatch }) => {
+const MatchList = ({ matches, onSelectMatch, selectedId }) => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
@@ -63,7 +63,11 @@ const MatchList = ({ matches, onSelectMatch }) => {
             <div
               key={match.id}
               onClick={() => onSelectMatch(match)}
-              className="bg-black/40 backdrop-blur-md border border-white/10 p-5 rounded-2xl cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all duration-300 ease-in-out hover:scale-[1.02]"
+              className={`bg-black/40 backdrop-blur-md border p-5 rounded-2xl cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] ${
+                selectedId === match.id
+                  ? 'border-blue-500 bg-blue-500/20'
+                  : 'border-white/10 hover:bg-white/10 hover:border-white/20'
+              }`}
             >
               <div className="flex justify-between items-center mb-3">
                 <span className="font-robertmedium text-lg text-white tracking-wide">
