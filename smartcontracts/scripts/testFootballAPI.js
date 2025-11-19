@@ -2,16 +2,16 @@
 const API_KEY = "d752945a57514a439d2fa74e8b2db2ae";
 
 if (!API_KEY) {
-  console.error("❌ FOOTBALL_API_KEY not found in environment");
+  console.error(" FOOTBALL_API_KEY not found in environment");
   process.exit(1);
 }
 
 const today = new Date();
 const dateFrom = today.toISOString().split("T")[0];
     const future = new Date();
-    future.setDate(today.getDate() + 7);
+    future.setDate(today.getDate() + 14);
 const dateTo = future.toISOString().split("T")[0];
-console.log(`📅 Checking matches for: ${dateFrom}`);
+console.log(`  Checking matches for: ${dateFrom}`);
 
 const url = `https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${dateFrom}&dateTo=${dateTo}&status=SCHEDULED`;
 

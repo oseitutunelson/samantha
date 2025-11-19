@@ -9,7 +9,7 @@ async function main() {
   console.log("🔧 Setting up Chainlink Functions (Upcoming Matches)...");
 
   const [owner] = await ethers.getSigners();
-  const bettingContractAddress = "0xB8530571346B601f2f291B1298C3F46D7F7c480C";
+  const bettingContractAddress = "0x8A147A05A6DEC51f89b0e3aa836725802977D83a";
 
   const BettingContract = await ethers.getContractFactory("BettingContract", owner);
   const bettingContract = BettingContract.attach(bettingContractAddress).connect(owner);
@@ -99,7 +99,7 @@ async function main() {
   
   const tx1 = await bettingContract.setMatchesSource(matchesSourceCode);
   await tx1.wait();
-  console.log("✅ Matches source code set (next 7 days)");
+  console.log("✅ Matches source code set (next 14 days)");
 
   const tx2 = await bettingContract.setResultsSource(resultsSourceCode);
   await tx2.wait();
@@ -114,9 +114,9 @@ async function main() {
   console.log("✅ Request interval set to 0");
 
   console.log("\n🎯 Setup Complete!");
-  console.log("✨ Will fetch upcoming matches in next 7 days!");
+  console.log("✨ Will fetch upcoming matches in next 14 days!");
   console.log("\n📋 Configuration:");
-  console.log("   • Date Range: Today + 7 days");
+  console.log("   • Date Range: Today + 14 days");
   console.log("   • Max Matches: 5");
   console.log("   • API Key: Embedded in source code");
 }

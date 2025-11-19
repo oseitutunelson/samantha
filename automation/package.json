@@ -1,0 +1,19 @@
+{
+  "name": "automation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+"test": "node automated-match-fetcher.js once",
+    "start": "node automated-match-fetcher.js start",
+    "fetch": "node automated-match-fetcher.js once"
+    },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "ethers": "^6.15.0",
+    "node-cron": "^3.0.3"
+  }
+}

@@ -9,7 +9,7 @@ async function main() {
   console.log("🔍 Debugging BettingContract state...\n");
 
   const [owner] = await ethers.getSigners();
-  const bettingContractAddress = "0x7EecC8E10B83222816499835820B7727fd6F046e";
+  const bettingContractAddress = "0x01cddCc2c642EDc91800A9a893a8d2679cb98972";
 
   const BettingContract = await ethers.getContractFactory("BettingContract", owner);
   const bettingContract = BettingContract.attach(bettingContractAddress).connect(owner);
