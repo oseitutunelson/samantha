@@ -8,7 +8,7 @@ async function main() {
   console.log("📊 Parsing Chainlink response and adding matches...\n");
 
   const [owner] = await ethers.getSigners();
-  const contractAddress = "0x8A147A05A6DEC51f89b0e3aa836725802977D83a"; // Update this with the actual deployed contract address on Amoy!
+  const contractAddress = "0x19471E3Eac169CaF21e188E41BD0ECCEA0fb2f5B"; // Update this with the actual deployed contract address on Amoy!
 
   const BettingContract = await ethers.getContractFactory("BettingContract", owner);
   const contract = BettingContract.attach(contractAddress);

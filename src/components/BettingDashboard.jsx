@@ -5,7 +5,7 @@ import { useAccount, useWalletClient } from 'wagmi';
 import MatchList from './MatchList';
 import BetForm from './BetForm';
 import Results from './Results';
-import contractAbi from './contracts/BettingC.json';
+import contractAbi from './contracts/BettingContract.json';
 
 const BettingDashboard = ({ onBackToHome }) => {
   const { address, isConnected } = useAccount();
@@ -20,7 +20,7 @@ const BettingDashboard = ({ onBackToHome }) => {
   
   const hasRequestedRef = useRef(false);
 
-  const contractAddress = '0x8A147A05A6DEC51f89b0e3aa836725802977D83a';
+  const contractAddress = '0x152F01687A8dcad7646877a84541a39e41951EE4';
   const contractABI = contractAbi.abi;
 
   // ──────────────────────────────────────────────────────────────
@@ -30,7 +30,8 @@ const BettingDashboard = ({ onBackToHome }) => {
     if (walletClient && isConnected) {
       const init = async () => {
         try {
-          const provider = new ethers.BrowserProvider(walletClient.transport);
+          const network = new ethers.Network("matic-amoy", 80002);
+          const provider = new ethers.BrowserProvider(walletClient.transport, network);
           const signer = await provider.getSigner();
           const bettingContract = new ethers.Contract(contractAddress, contractABI, signer);
           setContract(bettingContract);

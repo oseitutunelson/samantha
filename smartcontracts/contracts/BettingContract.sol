@@ -1,6 +1,5 @@
- // SPDX-License-Identifier: MIT
-
- pragma solidity ^0.8.28;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
 
 import "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -34,19 +33,20 @@ contract BettingContract is FunctionsClient, Ownable {
     mapping(uint256 => Match) public matches;
     uint256[] public matchIds;
     mapping(bytes32 => uint256) public requestToMatchId;
+    mapping(bytes32 => bool) public isMatchesRequest; // ← NEW: Track matches requests
     uint256 public lastMatchRequestTime;
     uint256 public requestInterval = 10 seconds;
     uint8 public secretsLocation;
     bytes public encryptedSecretsReference;
     
     // Store raw Chainlink response for off-chain parsing
-    string public lastChainlinkResponse;
+    string public lastChainlinkResponse; // ← This was here but not being set!
     
     event MatchesFetched(uint256[] matchIds);
     event MatchResultFetched(uint256 matchId, uint8 result);
     event BetPlaced(address user, uint256 tokenId, uint256 matchId, uint8 prediction, uint256 amount);
     event BetResolved(uint256 tokenId, bool won, uint256 payout);
-    event ChainlinkResponseReceived(string response);
+    event ChainlinkResponseReceived(string response); // ← NEW: Event to track responses
 
     constructor(
         address router,
@@ -96,7 +96,8 @@ contract BettingContract is FunctionsClient, Ownable {
             req.addSecretsReference(encryptedSecretsReference);
         }
 
-        _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
+        bytes32 requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
+        isMatchesRequest[requestId] = true; // ← NEW: Mark this as a matches request
         lastMatchRequestTime = block.timestamp;
     }
 
@@ -126,17 +127,25 @@ contract BettingContract is FunctionsClient, Ownable {
         return result;
     }
 
-    // ABSOLUTE MINIMAL CALLBACK - just succeed
+    // ← FIXED: Now stores response for matches requests!
     function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory) internal override {
-        uint256 matchId = requestToMatchId[requestId];
+        // Check if this is a matches request
+        if (isMatchesRequest[requestId]) {
+            // Store the raw response so scripts can parse it
+            lastChainlinkResponse = string(response);
+            emit ChainlinkResponseReceived(string(response));
+            delete isMatchesRequest[requestId]; // Clean up
+            return;
+        }
         
+        // Otherwise it's a result request
+        uint256 matchId = requestToMatchId[requestId];
         if (matchId != 0) {
-            // Result request
             uint256 result = abi.decode(response, (uint256));
             matches[matchId].result = uint8(result);
             emit MatchResultFetched(matchId, uint8(result));
+            delete requestToMatchId[requestId]; // Clean up
         }
-        // For matches request, do nothing - just succeed
     }
 
     // OWNER MANUALLY ADDS MATCHES (split to avoid stack too deep)
@@ -204,5 +213,3 @@ contract BettingContract is FunctionsClient, Ownable {
         return (amount * odds) / 100;
     }
 }
-
- 
