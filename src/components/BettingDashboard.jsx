@@ -241,11 +241,11 @@ const BettingDashboard = ({ onBackToHome }) => {
         <ConnectButton />
       </div>
 
-      <div className="flex flex-col h-full py-10">
+      <div className="flex flex-col h-full py-0">
         {/* Hero */}
         <div className="relative z-10 h-dvh w-screen overflow-hidden rounded-lg bg-blue-75">
           <div className="absolute left-0 top-4 z-40 size-full">
-            <div className="mt-24 px-5 sm:px-10">
+            <div className="mt-24 px-5 sm:px-10 ">
               <h1 className="hero-heading header-font text-blue-100">
                 S<b>a</b>mantha
               </h1>
