@@ -17,10 +17,11 @@ const BettingDashboard = ({ onBackToHome }) => {
   const [isOwner, setIsOwner] = useState(false);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [fetchingViaChainlink, setFetchingViaChainlink] = useState(false);
-  
+  const [betsRefreshTrigger, setBetsRefreshTrigger] = useState(0);
+
   const hasRequestedRef = useRef(false);
 
-  const contractAddress = '0x152F01687A8dcad7646877a84541a39e41951EE4';
+  const contractAddress = '0x513EC06a093b9c027e07Ed00427A5269d1E0F4B9';
   const contractABI = contractAbi.abi;
 
   // ──────────────────────────────────────────────────────────────
@@ -313,10 +314,13 @@ const BettingDashboard = ({ onBackToHome }) => {
                       match={selectedMatch}
                       contract={contract}
                       account={address}
-                      onBetPlaced={fetchMatches}
+                      onBetPlaced={() => {
+                        fetchMatches();
+                        setBetsRefreshTrigger(prev => prev + 1);
+                      }}
                     />
                   )}
-                  <Results contract={contract} account={address} />
+                  <Results contract={contract} account={address} refreshTrigger={betsRefreshTrigger} />
                 </div>
               </div>
             </div>

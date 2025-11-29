@@ -9,7 +9,7 @@ async function main() {
   console.log("🔧 Setting up Chainlink Functions (Upcoming Matches)...");
 
   const [owner] = await ethers.getSigners();
-  const bettingContractAddress = "0x152F01687A8dcad7646877a84541a39e41951EE4";
+  const bettingContractAddress = "0x513EC06a093b9c027e07Ed00427A5269d1E0F4B9";
 
   const BettingContract = await ethers.getContractFactory("BettingContract", owner);
   const bettingContract = BettingContract.attach(bettingContractAddress).connect(owner);
@@ -19,7 +19,7 @@ async function main() {
     throw new Error("❌ FOOTBALL_API_KEY not found in environment variables");
   }
 
-  console.log("📝 Creating source code for UPCOMING matches (next 7 days)...");
+  console.log("📝 Creating source code for UPCOMING matches (next 14 days)...");
 
   // Fetch upcoming matches in the next 7 days instead of just today
   const matchesSourceCode = `

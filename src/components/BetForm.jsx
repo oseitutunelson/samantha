@@ -15,7 +15,7 @@ const BetForm = ({ match, contract, account, onBetPlaced }) => {
       const amountInWei = ethers.parseUnits(amount, 6); // Assuming USDT has 6 decimals
 
       // First, approve the contract to spend USDT
-      const usdtAddress = '0xEf62e83381ab2Fd92cAAe4A96b35d8Ac316530Fb'; // USDT contract address from deployment
+      const usdtAddress = '0x6caea8E4D5Fbfa00b0a2e9645a86e489926fe6c6'; // USDT contract address from deployment
       const usdtABI = ['function approve(address spender, uint256 amount) public returns (bool)'];
       const usdtContract = new ethers.Contract(usdtAddress, usdtABI, contract.runner);
 

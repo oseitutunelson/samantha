@@ -11,7 +11,7 @@ dotenv.config();
 const CONFIG = {
   RPC_URL: process.env.AMOY_RPC_URL || 'https://rpc-amoy.polygon.technology',
   PRIVATE_KEY: process.env.AMOY_PRIVATE_KEY,
-  CONTRACT_ADDRESS: '0x152F01687A8dcad7646877a84541a39e41951EE4',
+  CONTRACT_ADDRESS: '0x513EC06a093b9c027e07Ed00427A5269d1E0F4B9',
   SCHEDULE: '0 6 * * *', // Daily at 6 AM
 };
 

@@ -36,4 +36,14 @@ contract BetTicketNFT is ERC721, Ownable {
         betDetails[tokenId].resolved = true;
         betDetails[tokenId].won = won;
     }
+
+    // ← ADD THIS FUNCTION to expose _nextTokenId
+    function getNextTokenId() public view returns (uint256) {
+        return _nextTokenId;
+    }
+
+    // ← ADD THIS FUNCTION for easier frontend integration
+    function totalSupply() public view returns (uint256) {
+        return _nextTokenId;
+    }
 }
