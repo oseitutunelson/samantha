@@ -25,4 +25,4 @@ jobs:
           AMOY_PRIVATE_KEY: ${{ secrets.AMOY_PRIVATE_KEY }}
           AMOY_RPC_URL: ${{ secrets.AMOY_RPC_URL }}
           CHAINLINK_SUBSCRIPTION_ID: ${{ secrets.CHAINLINK_SUBSCRIPTION_ID }}
-        run: node automated-match-fetcher.js once
+        run: node automation/automated-match-fetcher.js once
