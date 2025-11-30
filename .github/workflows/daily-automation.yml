@@ -18,11 +18,13 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
+        working-directory: ./automation
         run: npm install
       
       - name: Run automation
+        working-directory: ./automation
         env:
           AMOY_PRIVATE_KEY: ${{ secrets.AMOY_PRIVATE_KEY }}
           AMOY_RPC_URL: ${{ secrets.AMOY_RPC_URL }}
           CHAINLINK_SUBSCRIPTION_ID: ${{ secrets.CHAINLINK_SUBSCRIPTION_ID }}
-        run: node automation/automated-match-fetcher.js once
+        run: node automated-match-fetcher.js once
