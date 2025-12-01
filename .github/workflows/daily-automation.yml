@@ -1,16 +1,21 @@
+# .github/workflows/automation.yml
+# For script located in automation/ folder
+
 name: Daily Match Automation
 
 on:
   schedule:
     - cron: '0 6 * * *'  # Daily at 6 AM UTC
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Allow manual trigger for testing
 
 jobs:
   fetch-matches:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -23,8 +28,27 @@ jobs:
       
       - name: Run automation
         working-directory: ./automation
+        timeout-minutes: 10
         env:
-          AMOY_PRIVATE_KEY: ${{ secrets.AMOY_PRIVATE_KEY }}
+          PRIVATE_KEY: ${{ secrets.AMOY_PRIVATE_KEY }}
           AMOY_RPC_URL: ${{ secrets.AMOY_RPC_URL }}
           CHAINLINK_SUBSCRIPTION_ID: ${{ secrets.CHAINLINK_SUBSCRIPTION_ID }}
-        run: node automated-match-fetcher.js once
+        run: |
+          echo "🚀 Starting automation..."
+          node automated-match-fetcher.js once
+          
+          if [ $? -eq 0 ]; then
+            echo ""
+            echo "✅ SUCCESS!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Automation completed successfully"
+            echo "Date: $(date)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          else
+            echo ""
+            echo "❌ FAILED!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Check the logs above for errors"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
