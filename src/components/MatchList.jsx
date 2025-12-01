@@ -16,7 +16,10 @@ const MatchList = ({ matches, onSelectMatch, selectedId }) => {
     return `${num}/${denom || 1}`;
   };
 
-  const getStatusColor = (result) => {
+  const getStatusColor = (result, matchDate) => {
+    const now = new Date();
+    const isEnded = matchDate < now;
+
     switch (result) {
       case 1:
         return 'text-green-400'; // Home Win
@@ -25,11 +28,14 @@ const MatchList = ({ matches, onSelectMatch, selectedId }) => {
       case 3:
         return 'text-red-400'; // Away Win
       default:
-        return 'text-blue-300'; // Scheduled
+        return isEnded ? 'text-orange-400' : 'text-blue-300'; // Ended - Pending Result or Scheduled
     }
   };
 
-  const getStatusText = (result) => {
+  const getStatusText = (result, matchDate) => {
+    const now = new Date();
+    const isEnded = matchDate < now;
+
     switch (result) {
       case 1:
         return 'Home Win';
@@ -38,7 +44,7 @@ const MatchList = ({ matches, onSelectMatch, selectedId }) => {
       case 3:
         return 'Away Win';
       default:
-        return 'Scheduled';
+        return isEnded ? 'Ended - Pending Result' : 'Scheduled';
     }
   };
 
@@ -90,8 +96,8 @@ const MatchList = ({ matches, onSelectMatch, selectedId }) => {
                 </span>
               </div>
 
-              <div className={`text-sm font-general ${getStatusColor(match.result)}`}>
-                Status: {getStatusText(match.result)}
+              <div className={`text-sm font-general ${getStatusColor(match.result, match.matchDate)}`}>
+                Status: {getStatusText(match.result, match.matchDate)}
               </div>
             </div>
           ))}

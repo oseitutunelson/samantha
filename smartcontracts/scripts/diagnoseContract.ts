@@ -60,6 +60,22 @@ async function main() {
   try {
     const matchCount = await contract.getMatchIdsLength();
     console.log(`✅ Current matches: ${matchCount.toString()}`);
+
+    // Fetch and display match details
+    if (matchCount > 0) {
+      console.log("\n📅 Match details:");
+      for (let i = 0; i < Number(matchCount); i++) {
+        try {
+          const matchId = await contract.matchIds(i);
+          const match = await contract.matches(matchId);
+          const matchDate = new Date(Number(match.matchDate) * 1000);
+          console.log(`  ${i + 1}. ${match.homeTeam} vs ${match.awayTeam}`);
+          console.log(`     ID: ${matchId.toString()}, Date: ${matchDate.toISOString()}, Result: ${match.result}`);
+        } catch (e: any) {
+          console.log(`     ❌ Error reading match ${i}: ${e.message}`);
+        }
+      }
+    }
   } catch (e: any) {
     console.log(`❌ Could not read match count: ${e.message}`);
   }

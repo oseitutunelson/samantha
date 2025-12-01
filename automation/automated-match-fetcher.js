@@ -128,7 +128,7 @@ class CompleteAutomation {
       const matchStr = matchStrings[i].trim();
       
       try {
-        // Parse: "537898:Burnley(1.38)-Draw(3.45)-Chelsea(1.16)"
+        // Parse: "537898:Burnley(1.38)-Draw(3.45)-Chelsea(1.16)-1733078400"
         const [idPart, rest] = matchStr.split(':');
         const id = BigInt(idPart);
 
@@ -148,8 +148,9 @@ class CompleteAutomation {
         const away = awayMatch ? awayMatch[1] : 'Team B';
         const aOdds = awayMatch ? Math.round(parseFloat(awayMatch[2]) * 100) : 200;
 
-        // Match date: current time + (i+1) days
-        const matchDate = BigInt(Math.floor(Date.now() / 1000) + (i + 1) * 86400);
+        // Parse actual match date from API
+        const matchDateStr = parts[3];
+        const matchDate = matchDateStr ? BigInt(matchDateStr) : BigInt(Math.floor(Date.now() / 1000) + (i + 1) * 86400);
 
         matches.push({
           id,

@@ -50,11 +50,12 @@ async function main() {
       const home = (match.homeTeam.shortName || match.homeTeam.name || "Home").replace(/[^a-zA-Z0-9]/g, '');
       const away = (match.awayTeam.shortName || match.awayTeam.name || "Away").replace(/[^a-zA-Z0-9]/g, '');
       const matchId = String(match.id);
+      const matchDate = new Date(match.utcDate).getTime() / 1000; // Convert to Unix timestamp
       const homeOdds = (Math.random() * 2 + 1).toFixed(2);
       const drawOdds = (Math.random() * 2 + 2).toFixed(2);
       const awayOdds = (Math.random() * 2 + 1).toFixed(2);
-      
-      const matchStr = matchId + ":" + home + "(" + homeOdds + ")-Draw(" + drawOdds + ")-" + away + "(" + awayOdds + ")";
+
+      const matchStr = matchId + ":" + home + "(" + homeOdds + ")-Draw(" + drawOdds + ")-" + away + "(" + awayOdds + ")-" + matchDate;
       results.push(matchStr);
     }
     

@@ -1,4 +1,5 @@
 import { FaDiscord, FaTwitter, FaYoutube, FaMedium } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const socialLinks = [
   { href: "https://discord.com", icon: <FaDiscord />, label: "Discord" },
@@ -8,6 +9,7 @@ const socialLinks = [
 ];
 
 const Footer = () => {
+  const navigate = useNavigate();
   return (
     <footer className="w-full font-general bg-gray-900 text-white py-10">
       <div className="container mx-auto flex flex-col gap-10 px-6 md:flex-row md:justify-between">
@@ -37,6 +39,12 @@ const Footer = () => {
           >
             Privacy Policy
           </a>
+          <button
+            onClick={() => navigate('/whitepaper')}
+            className="hover:underline hover:text-white text-left"
+          >
+            Whitepaper
+          </button>
         </div>
 
         <div className="flex flex-col gap-4">

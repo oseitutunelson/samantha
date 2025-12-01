@@ -17,9 +17,11 @@ const BettingDashboard = ({ onBackToHome }) => {
   const [isOwner, setIsOwner] = useState(false);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [fetchingViaChainlink, setFetchingViaChainlink] = useState(false);
+  const [requestingResults, setRequestingResults] = useState(false);
   const [betsRefreshTrigger, setBetsRefreshTrigger] = useState(0);
 
   const hasRequestedRef = useRef(false);
+  const hasRequestedResultsRef = useRef(false);
 
   const contractAddress = '0x513EC06a093b9c027e07Ed00427A5269d1E0F4B9';
   const contractABI = contractAbi.abi;
@@ -131,12 +133,18 @@ const BettingDashboard = ({ onBackToHome }) => {
       fetchMatches();
     };
 
+    const onMatchResultFetched = (matchId, result) => {
+      console.log('🎉 MatchResultFetched event!', matchId, result);
+      fetchMatches();
+    };
+
     const onParsingError = (reason, data) => {
       console.error('❌ ParsingError event:', reason, data);
     };
 
     try {
       contract.on('MatchesFetched', onMatchesFetched);
+      contract.on('MatchResultFetched', onMatchResultFetched);
       contract.on('ParsingError', onParsingError);
       console.log('✅ Event listeners attached');
     } catch (error) {
@@ -146,6 +154,7 @@ const BettingDashboard = ({ onBackToHome }) => {
     return () => {
       try {
         contract.off('MatchesFetched', onMatchesFetched);
+        contract.off('MatchResultFetched', onMatchResultFetched);
         contract.off('ParsingError', onParsingError);
         console.log('🧹 Cleaned up event listeners');
       } catch (error) {
@@ -163,16 +172,16 @@ const BettingDashboard = ({ onBackToHome }) => {
     const checkAndRequest = async () => {
       try {
         const length = await contract.getMatchIdsLength();
-        
+
         if (length === 0n) {
           console.log('🤖 Auto-requesting matches (owner)...');
           hasRequestedRef.current = true;
-          
+
           const tx = await contract.requestMatches();
           console.log('⏳ Request transaction:', tx.hash);
           await tx.wait();
           console.log('✅ Request confirmed');
-          
+
           // Auto-refresh after 40 seconds
           setTimeout(() => {
             console.log('🔄 Auto-refreshing...');
@@ -191,6 +200,46 @@ const BettingDashboard = ({ onBackToHome }) => {
   }, [contract, isOwner, fetchMatches]);
 
   // ──────────────────────────────────────────────────────────────
+  // Auto-request results for ended matches without results
+  // ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!contract || !isOwner || hasRequestedResultsRef.current || matches.length === 0) return;
+
+    const checkAndRequestResults = async () => {
+      try {
+        const now = Math.floor(Date.now() / 1000);
+        const endedMatchesWithoutResults = matches.filter(match => match.matchDate < now && match.result === 0);
+
+        if (endedMatchesWithoutResults.length > 0) {
+          console.log(`🤖 Auto-requesting results for ${endedMatchesWithoutResults.length} ended matches (owner)...`);
+          hasRequestedResultsRef.current = true;
+
+          for (const match of endedMatchesWithoutResults) {
+            console.log(`📡 Auto-requesting result for match ${match.id}...`);
+            const tx = await contract.requestMatchResult(match.id);
+            console.log('⏳ Request transaction:', tx.hash);
+            await tx.wait();
+            console.log(`✅ Result requested for match ${match.id}`);
+          }
+
+          // Auto-refresh after 40 seconds
+          setTimeout(() => {
+            console.log('🔄 Auto-refreshing after result requests...');
+            fetchMatches();
+          }, 40000);
+        }
+      } catch (e) {
+        console.error('❌ Auto-request results failed:', e);
+        hasRequestedResultsRef.current = false; // Allow retry
+      }
+    };
+
+    // Small delay to let initial fetch complete
+    const timer = setTimeout(checkAndRequestResults, 3000);
+    return () => clearTimeout(timer);
+  }, [contract, isOwner, matches, fetchMatches]);
+
+  // ──────────────────────────────────────────────────────────────
   // Manual request
   // ──────────────────────────────────────────────────────────────
   const handleRequestMatches = async () => {
@@ -198,15 +247,15 @@ const BettingDashboard = ({ onBackToHome }) => {
     try {
       setFetchingViaChainlink(true);
       console.log('📡 Manual request started...');
-      
+
       const tx = await contract.requestMatches();
       console.log('⏳ Transaction:', tx.hash);
-      
+
       await tx.wait();
       console.log('✅ Transaction confirmed');
-      
+
       alert('✅ Matches requested! Wait 30-40 seconds then click Refresh.');
-      
+
       setTimeout(() => {
         fetchMatches();
       }, 35000);
@@ -215,6 +264,45 @@ const BettingDashboard = ({ onBackToHome }) => {
       alert('Request failed: ' + (e?.reason || e?.message || 'Unknown error'));
     } finally {
       setFetchingViaChainlink(false);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────────
+  // Request results for ended matches without results
+  // ──────────────────────────────────────────────────────────────
+  const handleRequestResults = async () => {
+    if (!contract) return;
+    try {
+      setRequestingResults(true);
+      console.log('📡 Requesting results for ended matches...');
+
+      const now = Math.floor(Date.now() / 1000);
+      let requestedCount = 0;
+
+      for (const match of matches) {
+        if (match.matchDate < now && match.result === 0) {
+          console.log(`📡 Requesting result for match ${match.id}...`);
+          const tx = await contract.requestMatchResult(match.id);
+          console.log('⏳ Transaction:', tx.hash);
+          await tx.wait();
+          console.log(`✅ Result requested for match ${match.id}`);
+          requestedCount++;
+        }
+      }
+
+      if (requestedCount > 0) {
+        alert(`✅ Results requested for ${requestedCount} matches! Wait 30-40 seconds then click Refresh.`);
+        setTimeout(() => {
+          fetchMatches();
+        }, 35000);
+      } else {
+        alert('No ended matches without results found.');
+      }
+    } catch (e) {
+      console.error('❌ Request results failed:', e);
+      alert('Request failed: ' + (e?.reason || e?.message || 'Unknown error'));
+    } finally {
+      setRequestingResults(false);
     }
   };
 
@@ -268,15 +356,19 @@ const BettingDashboard = ({ onBackToHome }) => {
                     </span>
                   </button>
 
-                  {/* {isOwner && (
+                  {isOwner && (
                     <button
-                      onClick={handleRequestMatches}
-                      disabled={fetchingViaChainlink}
-                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white transition-all disabled:opacity-50"
+                      onClick={handleRequestResults}
+                      disabled={requestingResults}
+                      className="group relative z-10 w-fit cursor-pointer overflow-hidden rounded-full bg-red-50
+                               px-7 py-3 text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md
+                               before:absolute before:inset-0 before:z-[-1] before:scale-0 before:rounded-full before:bg-[#edff66] before:transition-transform before:duration-300 before:origin-center hover:before:scale-100 disabled:opacity-50"
                     >
-                      {fetchingViaChainlink ? 'Requesting...' : 'Fetch New Matches'}
+                      <span className="relative inline-flex overflow-hidden font-general text-xs uppercase">
+                        {requestingResults ? 'Requesting Results...' : 'Request Results'}
+                      </span>
                     </button>
-                  )} */}
+                  )}
                 </div>
               )}
 

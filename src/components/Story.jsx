@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import AnimatedTitle from "./AnimatedTitle";
 import "../index.css";
 import gsap from "gsap";
@@ -6,6 +7,7 @@ import CreateEdge from "./CreateEdge";
 import Button from "./Button";
 
 const Story = () => {
+  const navigate = useNavigate();
   // Reference to the image element for mouse movement effects
   // It allows us to apply transformations based on mouse position
   const frameRef = useRef("null");
@@ -88,6 +90,7 @@ const Story = () => {
               id="realm-button"
               title="Launch Dapp"
               containerClass="mt-5"
+              onClick={() => navigate('/betting')}
             />
           </div>
         </div>
